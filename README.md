@@ -1,4 +1,4 @@
-# DueBite-Demo
+# DueBite
 
 賞味期限のアプリです（デモ版）
 ## 実装済み
