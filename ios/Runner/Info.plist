@@ -24,12 +24,12 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>賞味期限を撮影して食品を登録するためにカメラを使用します。</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>賞味期限の写真を選んで食品を登録するために写真を使用します。</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

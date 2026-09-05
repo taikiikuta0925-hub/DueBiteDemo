@@ -191,10 +191,14 @@ class _ExpiryHomeState extends State<ExpiryHome> {
     );
     if (!mounted || result == null) return;
 
-    if (result.enabled && !_notificationsEnabled) {
+    if (result.enabled) {
       final granted = await widget.notificationService.requestPermission();
       if (!mounted) return;
       if (!granted) {
+        if (_notificationsEnabled) {
+          setState(() => _notificationsEnabled = false);
+          _persist();
+        }
         _showMessage('通知が許可されませんでした。端末設定から変更できます');
         return;
       }
@@ -1406,7 +1410,7 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
                   SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      '現在、期限通知はAndroid版で利用できます。',
+                      '期限通知はiOS・Android版で利用できます。',
                       style: TextStyle(color: Color(0xFF825B12)),
                     ),
                   ),

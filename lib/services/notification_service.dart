@@ -7,9 +7,12 @@ class NotificationService {
   static const _channel = MethodChannel('tabekiri/notifications');
 
   bool _initialized = false;
+  Future<void> _syncTail = Future<void>.value();
 
   bool get isSupported =>
-      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS);
 
   Future<void> initialize() async {
     if (!isSupported) return;
@@ -33,15 +36,13 @@ class NotificationService {
     required List<FoodItem> items,
     required bool enabled,
     required int reminderHour,
-  }) async {
-    if (!isSupported || !_initialized) return;
+  }) {
+    if (!isSupported || !_initialized) return Future<void>.value();
 
-    final activeItems = items.where((item) => !item.isConsumed).toList()
-      ..sort((a, b) => a.expiryDate.compareTo(b.expiryDate));
     final now = DateTime.now();
     final reminders = <Map<String, Object>>[];
 
-    for (final item in activeItems.take(32)) {
+    for (final item in items.where((item) => !item.isConsumed)) {
       final threeDaysBefore = DateTime(
         item.expiryDate.year,
         item.expiryDate.month,
@@ -74,11 +75,25 @@ class NotificationService {
       }
     }
 
+    reminders.sort(
+      (a, b) => (a['scheduledAt']! as int).compareTo(b['scheduledAt']! as int),
+    );
+
+    final arguments = <String, Object>{
+      'enabled': enabled,
+      // iOS keeps at most 64 pending local notifications per app.
+      'reminders': reminders.take(64).toList(),
+    };
+
+    // 全置換の同期が重なって、古い予約が最後に残ることを防ぐ。
+    final operation = _syncTail.then((_) => _sendReminders(arguments));
+    _syncTail = operation;
+    return operation;
+  }
+
+  Future<void> _sendReminders(Map<String, Object> arguments) async {
     try {
-      await _channel.invokeMethod<void>('syncReminders', {
-        'enabled': enabled,
-        'reminders': reminders,
-      });
+      await _channel.invokeMethod<void>('syncReminders', arguments);
     } catch (_) {
       // 通知の失敗で食品登録や食べきり操作を止めない。
     }
