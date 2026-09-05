@@ -20,7 +20,7 @@ class FoodRepository {
     if (rawItems == null) {
       return AppSnapshot(
         items: _sampleItems(),
-        points: points ?? 120,
+        points: points ?? 0,
         notificationsEnabled: preferences.getBool(_notificationsKey) ?? false,
         reminderHour: preferences.getInt(_reminderHourKey) ?? 9,
       );
@@ -39,7 +39,7 @@ class FoodRepository {
     } catch (_) {
       return AppSnapshot(
         items: _sampleItems(),
-        points: points ?? 120,
+        points: points ?? 0,
         notificationsEnabled: preferences.getBool(_notificationsKey) ?? false,
         reminderHour: preferences.getInt(_reminderHourKey) ?? 9,
       );

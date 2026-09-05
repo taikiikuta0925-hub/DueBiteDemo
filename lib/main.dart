@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'models/food_item.dart';
+import 'models/player_level.dart';
 import 'services/ai_expiry_service.dart';
 import 'services/food_repository.dart';
 import 'services/notification_service.dart';
@@ -17,6 +18,198 @@ const _orangeSoft = Color(0xFFFFE7DB);
 const _green = Color(0xFF2F7D62);
 const _greenSoft = Color(0xFFE1F1E9);
 const _yellow = Color(0xFFFFC857);
+
+class _AppPalette {
+  const _AppPalette({
+    required this.background,
+    required this.surface,
+    required this.surfaceMuted,
+    required this.input,
+    required this.text,
+    required this.muted,
+    required this.border,
+    required this.orangeSoft,
+    required this.green,
+    required this.greenSoft,
+    required this.agent,
+    required this.agentSoft,
+    required this.warning,
+    required this.warningText,
+    required this.warningSoft,
+    required this.danger,
+    required this.dangerSoft,
+    required this.blue,
+    required this.blueSoft,
+    required this.handle,
+    required this.disabled,
+  });
+
+  static const light = _AppPalette(
+    background: _canvas,
+    surface: _surface,
+    surfaceMuted: Color(0xFFFAF9F6),
+    input: Color(0xFFF1F0EB),
+    text: _ink,
+    muted: _muted,
+    border: Color(0xFFE8E5DE),
+    orangeSoft: _orangeSoft,
+    green: _green,
+    greenSoft: _greenSoft,
+    agent: Color(0xFF6750A4),
+    agentSoft: Color(0xFFEDE7F7),
+    warning: Color(0xFFA76C00),
+    warningText: Color(0xFF825B12),
+    warningSoft: Color(0xFFFFF4DB),
+    danger: Color(0xFFD44545),
+    dangerSoft: Color(0xFFFFE7E7),
+    blue: Color(0xFF476A85),
+    blueSoft: Color(0xFFE4EFF7),
+    handle: Color(0xFFD9D5CE),
+    disabled: Color(0xFFD7D3CD),
+  );
+
+  static const dark = _AppPalette(
+    background: Color(0xFF121110),
+    surface: Color(0xFF1D1B19),
+    surfaceMuted: Color(0xFF25221F),
+    input: Color(0xFF2D2926),
+    text: Color(0xFFF5F1EC),
+    muted: Color(0xFFBDB4AC),
+    border: Color(0xFF403A35),
+    orangeSoft: Color(0xFF4A291F),
+    green: Color(0xFF78D6B3),
+    greenSoft: Color(0xFF183A30),
+    agent: Color(0xFFCBB8FF),
+    agentSoft: Color(0xFF332A47),
+    warning: Color(0xFFFFCA68),
+    warningText: Color(0xFFF4D18A),
+    warningSoft: Color(0xFF403313),
+    danger: Color(0xFFFF918D),
+    dangerSoft: Color(0xFF482426),
+    blue: Color(0xFFA9CCE8),
+    blueSoft: Color(0xFF233849),
+    handle: Color(0xFF625B55),
+    disabled: Color(0xFF4A4540),
+  );
+
+  final Color background;
+  final Color surface;
+  final Color surfaceMuted;
+  final Color input;
+  final Color text;
+  final Color muted;
+  final Color border;
+  final Color orangeSoft;
+  final Color green;
+  final Color greenSoft;
+  final Color agent;
+  final Color agentSoft;
+  final Color warning;
+  final Color warningText;
+  final Color warningSoft;
+  final Color danger;
+  final Color dangerSoft;
+  final Color blue;
+  final Color blueSoft;
+  final Color handle;
+  final Color disabled;
+}
+
+extension _DueBiteThemeContext on BuildContext {
+  _AppPalette get appColors => Theme.of(this).brightness == Brightness.dark
+      ? _AppPalette.dark
+      : _AppPalette.light;
+}
+
+ThemeData _buildDueBiteTheme(Brightness brightness) {
+  final colors = brightness == Brightness.dark
+      ? _AppPalette.dark
+      : _AppPalette.light;
+  final colorScheme =
+      ColorScheme.fromSeed(
+        seedColor: _orange,
+        brightness: brightness,
+        surface: colors.background,
+      ).copyWith(
+        primary: _orange,
+        onPrimary: Colors.white,
+        secondary: colors.green,
+        secondaryContainer: colors.greenSoft,
+        onSecondaryContainer: colors.green,
+        tertiary: colors.agent,
+        tertiaryContainer: colors.agentSoft,
+        onTertiaryContainer: colors.agent,
+        error: colors.danger,
+        errorContainer: colors.dangerSoft,
+        onSurface: colors.text,
+        onSurfaceVariant: colors.muted,
+        outlineVariant: colors.border,
+      );
+  final baseTextTheme = brightness == Brightness.dark
+      ? ThemeData.dark().textTheme
+      : ThemeData.light().textTheme;
+
+  return ThemeData(
+    useMaterial3: true,
+    brightness: brightness,
+    colorScheme: colorScheme,
+    scaffoldBackgroundColor: colors.background,
+    canvasColor: colors.surface,
+    fontFamilyFallback: const ['Noto Sans JP', 'Yu Gothic', 'sans-serif'],
+    textTheme: baseTextTheme.apply(
+      bodyColor: colors.text,
+      displayColor: colors.text,
+    ),
+    appBarTheme: AppBarTheme(
+      backgroundColor: colors.background,
+      surfaceTintColor: Colors.transparent,
+      foregroundColor: colors.text,
+      elevation: 0,
+    ),
+    cardTheme: CardThemeData(
+      color: colors.surface,
+      elevation: 0,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: colors.surface,
+      surfaceTintColor: Colors.transparent,
+    ),
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: colors.surface,
+      surfaceTintColor: Colors.transparent,
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: colors.input,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 17),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: _orange, width: 1.6),
+      ),
+    ),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: brightness == Brightness.dark
+          ? colors.surfaceMuted
+          : _ink,
+      contentTextStyle: TextStyle(
+        color: brightness == Brightness.dark ? colors.text : Colors.white,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    ),
+    dividerColor: colors.border,
+  );
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,77 +237,27 @@ class DueBiteApp extends StatelessWidget {
     required this.repository,
     required this.notificationService,
     required this.initialSnapshot,
+    this.aiService = const AiExpiryService(),
   });
 
   final FoodRepository repository;
   final NotificationService notificationService;
   final AppSnapshot initialSnapshot;
+  final AiExpiryService aiService;
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = ColorScheme.fromSeed(
-      seedColor: _orange,
-      brightness: Brightness.light,
-      surface: _canvas,
-    );
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'DueBite',
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: colorScheme,
-        scaffoldBackgroundColor: _canvas,
-        fontFamilyFallback: const ['Noto Sans JP', 'Yu Gothic', 'sans-serif'],
-        textTheme: ThemeData.light().textTheme.apply(
-          bodyColor: _ink,
-          displayColor: _ink,
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: _canvas,
-          surfaceTintColor: Colors.transparent,
-          foregroundColor: _ink,
-          elevation: 0,
-        ),
-        cardTheme: CardThemeData(
-          color: _surface,
-          elevation: 0,
-          margin: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: const Color(0xFFF1F0EB),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 18,
-            vertical: 17,
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: _orange, width: 1.6),
-          ),
-        ),
-        snackBarTheme: SnackBarThemeData(
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: _ink,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
-      ),
+      theme: _buildDueBiteTheme(Brightness.light),
+      darkTheme: _buildDueBiteTheme(Brightness.dark),
+      themeMode: ThemeMode.system,
       home: ExpiryHome(
         repository: repository,
         notificationService: notificationService,
         initialSnapshot: initialSnapshot,
+        aiService: aiService,
       ),
     );
   }
@@ -126,11 +269,13 @@ class ExpiryHome extends StatefulWidget {
     required this.repository,
     required this.notificationService,
     required this.initialSnapshot,
+    this.aiService = const AiExpiryService(),
   });
 
   final FoodRepository repository;
   final NotificationService notificationService;
   final AppSnapshot initialSnapshot;
+  final AiExpiryService aiService;
 
   @override
   State<ExpiryHome> createState() => _ExpiryHomeState();
@@ -138,7 +283,7 @@ class ExpiryHome extends StatefulWidget {
 
 class _ExpiryHomeState extends State<ExpiryHome> {
   final _picker = ImagePicker();
-  final _aiService = const AiExpiryService();
+  AiExpiryService get _aiService => widget.aiService;
   late List<FoodItem> _items;
   late int _points;
   late bool _notificationsEnabled;
@@ -336,11 +481,15 @@ class _ExpiryHomeState extends State<ExpiryHome> {
         icon: Container(
           width: 58,
           height: 58,
-          decoration: const BoxDecoration(
-            color: _greenSoft,
+          decoration: BoxDecoration(
+            color: context.appColors.greenSoft,
             shape: BoxShape.circle,
           ),
-          child: const Icon(Icons.restaurant_rounded, color: _green, size: 30),
+          child: Icon(
+            Icons.restaurant_rounded,
+            color: context.appColors.green,
+            size: 30,
+          ),
         ),
         title: const Text('食べきりましたか？'),
         content: Text(
@@ -348,7 +497,7 @@ class _ExpiryHomeState extends State<ExpiryHome> {
               ? '${item.name}を食べきると $points ポイントもらえます。'
               : '${item.name}を食べきり済みにします。',
           textAlign: TextAlign.center,
-          style: const TextStyle(color: _muted, height: 1.5),
+          style: TextStyle(color: context.appColors.muted, height: 1.5),
         ),
         actionsAlignment: MainAxisAlignment.center,
         actions: [
@@ -449,8 +598,8 @@ class _ExpiryHomeState extends State<ExpiryHome> {
       ),
       bottomNavigationBar: NavigationBar(
         height: 72,
-        backgroundColor: _surface,
-        indicatorColor: _orangeSoft,
+        backgroundColor: context.appColors.surface,
+        indicatorColor: context.appColors.orangeSoft,
         selectedIndex: _pageIndex,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         onDestinationSelected: (index) => setState(() => _pageIndex = index),
@@ -566,6 +715,7 @@ class _HomeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final level = PlayerLevel.fromPoints(points);
     return Row(
       children: [
         Container(
@@ -578,11 +728,11 @@ class _HomeHeader extends StatelessWidget {
           child: const Icon(Icons.eco_rounded, color: Colors.white, size: 27),
         ),
         const SizedBox(width: 12),
-        const Expanded(
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'DueBite',
                 style: TextStyle(
                   fontSize: 21,
@@ -590,24 +740,46 @@ class _HomeHeader extends StatelessWidget {
                   letterSpacing: .5,
                 ),
               ),
-              Text('おいしく、むだなく。', style: TextStyle(color: _muted, fontSize: 12)),
+              Text(
+                'おいしく、むだなく。',
+                style: TextStyle(color: context.appColors.muted, fontSize: 12),
+              ),
             ],
           ),
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
           decoration: BoxDecoration(
-            color: _surface,
+            color: context.appColors.surface,
             borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: const Color(0xFFECE9E2)),
+            border: Border.all(color: context.appColors.border),
           ),
           child: Row(
             children: [
               const Icon(Icons.stars_rounded, color: _yellow, size: 20),
-              const SizedBox(width: 5),
-              Text(
-                '$points P',
-                style: const TextStyle(fontWeight: FontWeight.w800),
+              const SizedBox(width: 7),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$points P',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      height: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    'Lv.${level.level} ${level.name}',
+                    key: const Key('home-player-level'),
+                    style: TextStyle(
+                      color: context.appColors.muted,
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w700,
+                      height: 1,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -778,9 +950,9 @@ class FoodCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
-          color: _surface,
+          color: context.appColors.surface,
           borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: const Color(0xFFEDEAE4)),
+          border: Border.all(color: context.appColors.border),
         ),
         child: Row(
           children: [
@@ -788,7 +960,7 @@ class FoodCard extends StatelessWidget {
               width: 54,
               height: 54,
               decoration: BoxDecoration(
-                color: status.softColor,
+                color: status.softColor(context),
                 borderRadius: BorderRadius.circular(17),
               ),
               alignment: Alignment.center,
@@ -829,7 +1001,10 @@ class FoodCard extends StatelessWidget {
                   const SizedBox(height: 5),
                   Text(
                     '${_formatDate(item.expiryDate)} ・ ${item.category}',
-                    style: const TextStyle(color: _muted, fontSize: 12.5),
+                    style: TextStyle(
+                      color: context.appColors.muted,
+                      fontSize: 12.5,
+                    ),
                   ),
                 ],
               ),
@@ -842,10 +1017,14 @@ class FoodCard extends StatelessWidget {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: _greenSoft,
+                  color: context.appColors.greenSoft,
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Icon(Icons.check_rounded, color: _green, size: 20),
+                child: Icon(
+                  Icons.check_rounded,
+                  color: context.appColors.green,
+                  size: 20,
+                ),
               )
             else
               Column(
@@ -854,7 +1033,7 @@ class FoodCard extends StatelessWidget {
                   Text(
                     status.label,
                     style: TextStyle(
-                      color: status.color,
+                      color: status.color(context),
                       fontSize: 13,
                       fontWeight: FontWeight.w900,
                     ),
@@ -868,7 +1047,9 @@ class FoodCard extends StatelessWidget {
                       child: Text(
                         '食べきった',
                         style: TextStyle(
-                          color: onConsume == null ? _muted : _green,
+                          color: onConsume == null
+                              ? context.appColors.muted
+                              : context.appColors.green,
                           fontWeight: FontWeight.w700,
                           fontSize: 12,
                         ),
@@ -882,9 +1063,9 @@ class FoodCard extends StatelessWidget {
                 tooltip: '削除',
                 visualDensity: VisualDensity.compact,
                 onPressed: onDelete,
-                icon: const Icon(
+                icon: Icon(
                   Icons.more_vert_rounded,
-                  color: _muted,
+                  color: context.appColors.muted,
                   size: 20,
                 ),
               ),
@@ -905,7 +1086,7 @@ class _EmptyFoods extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(26),
       decoration: BoxDecoration(
-        color: _surface,
+        color: context.appColors.surface,
         borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
@@ -917,9 +1098,9 @@ class _EmptyFoods extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 5),
-          const Text(
+          Text(
             '写真または手入力で追加できます',
-            style: TextStyle(color: _muted, fontSize: 13),
+            style: TextStyle(color: context.appColors.muted, fontSize: 13),
           ),
           const SizedBox(height: 12),
           TextButton(onPressed: onAdd, child: const Text('食品を登録する')),
@@ -937,27 +1118,30 @@ class _WasteTipCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: _greenSoft,
+        color: context.appColors.greenSoft,
         borderRadius: BorderRadius.circular(22),
       ),
-      child: const Row(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.lightbulb_outline_rounded, color: _green),
-          SizedBox(width: 12),
+          Icon(Icons.lightbulb_outline_rounded, color: context.appColors.green),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'DueBite ヒント',
-                  style: TextStyle(color: _green, fontWeight: FontWeight.w900),
+                  style: TextStyle(
+                    color: context.appColors.green,
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   '期限の近い食品を冷蔵庫の手前に置くと、食べ忘れを減らせます。',
                   style: TextStyle(
-                    color: Color(0xFF456B5C),
+                    color: context.appColors.green,
                     height: 1.5,
                     fontSize: 13,
                   ),
@@ -1032,10 +1216,10 @@ class _FoodListPageState extends State<FoodListPage> {
         const SizedBox(height: 15),
         Expanded(
           child: filtered.isEmpty
-              ? const Center(
+              ? Center(
                   child: Text(
                     'このリストに食品はありません',
-                    style: TextStyle(color: _muted),
+                    style: TextStyle(color: context.appColors.muted),
                   ),
                 )
               : ListView.separated(
@@ -1080,10 +1264,10 @@ class _FilterPill extends StatelessWidget {
         selected: selected,
         onSelected: (_) => onTap(),
         selectedColor: _ink,
-        backgroundColor: _surface,
+        backgroundColor: context.appColors.surface,
         side: BorderSide.none,
         labelStyle: TextStyle(
-          color: selected ? Colors.white : _muted,
+          color: selected ? Colors.white : context.appColors.muted,
           fontWeight: FontWeight.w700,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
@@ -1100,8 +1284,7 @@ class PointsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final level = points ~/ 300 + 1;
-    final progress = (points % 300) / 300;
+    final playerLevel = PlayerLevel.fromPoints(points);
     final history = items.where((item) => item.earnedPoints > 0).toList()
       ..sort((a, b) => b.consumedAt!.compareTo(a.consumedAt!));
     return CustomScrollView(
@@ -1132,7 +1315,8 @@ class PointsPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'LEVEL $level',
+                      'LEVEL ${playerLevel.level} · ${playerLevel.name}',
+                      key: const Key('points-player-level'),
                       style: const TextStyle(
                         color: _yellow,
                         fontWeight: FontWeight.w900,
@@ -1171,7 +1355,7 @@ class PointsPage extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(20),
                       child: LinearProgressIndicator(
-                        value: progress,
+                        value: playerLevel.progress,
                         minHeight: 8,
                         backgroundColor: Colors.white12,
                         valueColor: const AlwaysStoppedAnimation(_yellow),
@@ -1179,7 +1363,9 @@ class PointsPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '次のレベルまで ${300 - (points % 300)} P',
+                      playerLevel.isMaxLevel
+                          ? '最高レベルに到達しました！'
+                          : '次のレベルまで ${playerLevel.pointsToNextLevel} P',
                       style: const TextStyle(
                         color: Colors.white60,
                         fontSize: 12,
@@ -1215,18 +1401,52 @@ class PointsPage extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 26),
+              const _SectionHeader(title: 'デモ報酬'),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: context.appColors.warningSoft,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.science_outlined,
+                      color: context.appColors.warning,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        '報酬は開発中のデモです。実際の交換・利用はまだできません。',
+                        style: TextStyle(
+                          color: context.appColors.warningText,
+                          fontSize: 12,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              for (final reward in _demoRewards) ...[
+                _DemoRewardCard(reward: reward, points: points),
+                const SizedBox(height: 10),
+              ],
+              const SizedBox(height: 16),
               const _SectionHeader(title: '獲得履歴'),
               const SizedBox(height: 10),
               if (history.isEmpty)
                 Container(
                   padding: const EdgeInsets.all(22),
                   decoration: BoxDecoration(
-                    color: _surface,
+                    color: context.appColors.surface,
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Text(
+                  child: Text(
                     '食品を食べきると、ここに履歴が表示されます。',
-                    style: TextStyle(color: _muted),
+                    style: TextStyle(color: context.appColors.muted),
                   ),
                 )
               else
@@ -1238,7 +1458,7 @@ class PointsPage extends StatelessWidget {
                           horizontal: 4,
                         ),
                         leading: CircleAvatar(
-                          backgroundColor: _greenSoft,
+                          backgroundColor: context.appColors.greenSoft,
                           child: Text(_foodEmoji(item.category)),
                         ),
                         title: Text(
@@ -1250,8 +1470,8 @@ class PointsPage extends StatelessWidget {
                         ),
                         trailing: Text(
                           '+${item.earnedPoints} P',
-                          style: const TextStyle(
-                            color: _green,
+                          style: TextStyle(
+                            color: context.appColors.green,
                             fontWeight: FontWeight.w900,
                           ),
                         ),
@@ -1261,6 +1481,150 @@ class PointsPage extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _DemoReward {
+  const _DemoReward({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.requiredPoints,
+  });
+
+  final String icon;
+  final String title;
+  final String description;
+  final int requiredPoints;
+}
+
+const _demoRewards = [
+  _DemoReward(
+    icon: '🌱',
+    title: 'はじめの一歩バッジ',
+    description: 'プロフィールに飾れる限定バッジ',
+    requiredPoints: 100,
+  ),
+  _DemoReward(
+    icon: '🎨',
+    title: 'グリーンテーマ',
+    description: 'DueBiteの限定テーマカラー',
+    requiredPoints: 300,
+  ),
+  _DemoReward(
+    icon: '🎟️',
+    title: 'フードレスキュークーポン',
+    description: '協力店で使える予定のクーポン',
+    requiredPoints: 600,
+  ),
+];
+
+class _DemoRewardCard extends StatelessWidget {
+  const _DemoRewardCard({required this.reward, required this.points});
+
+  final _DemoReward reward;
+  final int points;
+
+  @override
+  Widget build(BuildContext context) {
+    final unlocked = points >= reward.requiredPoints;
+    final remaining = (reward.requiredPoints - points).clamp(
+      0,
+      reward.requiredPoints,
+    );
+    final progress = (points / reward.requiredPoints).clamp(0.0, 1.0);
+
+    return Container(
+      key: ValueKey('demo-reward-${reward.requiredPoints}'),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: context.appColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: unlocked
+              ? context.appColors.green.withValues(alpha: .45)
+              : context.appColors.border,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: unlocked
+                  ? context.appColors.greenSoft
+                  : context.appColors.surfaceMuted,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              reward.icon,
+              style: TextStyle(
+                fontSize: 25,
+                color: unlocked ? null : context.appColors.muted,
+              ),
+            ),
+          ),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  reward.title,
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  reward.description,
+                  style: TextStyle(
+                    color: context.appColors.muted,
+                    fontSize: 11.5,
+                  ),
+                ),
+                if (!unlocked) ...[
+                  const SizedBox(height: 9),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 5,
+                      backgroundColor: context.appColors.input,
+                      color: _orange,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Icon(
+                unlocked ? Icons.lock_open_rounded : Icons.lock_outline_rounded,
+                color: unlocked
+                    ? context.appColors.green
+                    : context.appColors.muted,
+                size: 20,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                unlocked ? '準備中' : 'あと $remaining P',
+                style: TextStyle(
+                  color: unlocked
+                      ? context.appColors.green
+                      : context.appColors.muted,
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1281,14 +1645,17 @@ class _PointRule extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
       decoration: BoxDecoration(
-        color: _surface,
+        color: context.appColors.surface,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Column(
         children: [
           Text(icon, style: const TextStyle(fontSize: 25)),
           const SizedBox(height: 7),
-          Text(title, style: const TextStyle(color: _muted, fontSize: 11)),
+          Text(
+            title,
+            style: TextStyle(color: context.appColors.muted, fontSize: 11),
+          ),
           const SizedBox(height: 3),
           Text(
             points,
@@ -1318,7 +1685,10 @@ class _PageTitle extends StatelessWidget {
             style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 5),
-          Text(subtitle, style: const TextStyle(color: _muted, fontSize: 13)),
+          Text(
+            subtitle,
+            style: TextStyle(color: context.appColors.muted, fontSize: 13),
+          ),
         ],
       ),
     );
@@ -1371,9 +1741,9 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
         20,
         MediaQuery.paddingOf(context).bottom + 22,
       ),
-      decoration: const BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      decoration: BoxDecoration(
+        color: context.appColors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1384,7 +1754,7 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
               width: 38,
               height: 4,
               decoration: BoxDecoration(
-                color: const Color(0xFFD9D5CE),
+                color: context.appColors.handle,
                 borderRadius: BorderRadius.circular(4),
               ),
             ),
@@ -1395,23 +1765,29 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 5),
-          const Text('賞味期限の3日前と当日にお知らせします', style: TextStyle(color: _muted)),
+          Text(
+            '賞味期限の3日前と当日にお知らせします',
+            style: TextStyle(color: context.appColors.muted),
+          ),
           const SizedBox(height: 20),
           if (!widget.isSupported)
             Container(
               padding: const EdgeInsets.all(15),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFF4DB),
+                color: context.appColors.warningSoft,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.info_outline_rounded, color: Color(0xFFA76C00)),
-                  SizedBox(width: 10),
+                  Icon(
+                    Icons.info_outline_rounded,
+                    color: context.appColors.warning,
+                  ),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       '期限通知はiOS・Android版で利用できます。',
-                      style: TextStyle(color: Color(0xFF825B12)),
+                      style: TextStyle(color: context.appColors.warningText),
                     ),
                   ),
                 ],
@@ -1420,7 +1796,7 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
           else ...[
             Container(
               decoration: BoxDecoration(
-                color: const Color(0xFFF7F6F2),
+                color: context.appColors.surfaceMuted,
                 borderRadius: BorderRadius.circular(18),
               ),
               child: SwitchListTile(
@@ -1436,7 +1812,9 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
                   _enabled
                       ? Icons.notifications_active_rounded
                       : Icons.notifications_off_outlined,
-                  color: _enabled ? _green : _muted,
+                  color: _enabled
+                      ? context.appColors.green
+                      : context.appColors.muted,
                 ),
                 onChanged: (value) => setState(() => _enabled = value),
               ),
@@ -1460,7 +1838,7 @@ class _NotificationSettingsSheetState extends State<NotificationSettingsSheet> {
                       labelStyle: TextStyle(
                         color: _reminderHour == hour && _enabled
                             ? Colors.white
-                            : _muted,
+                            : context.appColors.muted,
                         fontWeight: FontWeight.w700,
                       ),
                       side: BorderSide.none,
@@ -1508,9 +1886,9 @@ class _AddFoodSheet extends StatelessWidget {
         20,
         MediaQuery.paddingOf(context).bottom + 22,
       ),
-      decoration: const BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      decoration: BoxDecoration(
+        color: context.appColors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1519,7 +1897,7 @@ class _AddFoodSheet extends StatelessWidget {
             width: 38,
             height: 4,
             decoration: BoxDecoration(
-              color: const Color(0xFFD9D5CE),
+              color: context.appColors.handle,
               borderRadius: BorderRadius.circular(4),
             ),
           ),
@@ -1529,12 +1907,15 @@ class _AddFoodSheet extends StatelessWidget {
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 5),
-          const Text('登録方法を選んでください', style: TextStyle(color: _muted)),
+          Text(
+            '登録方法を選んでください',
+            style: TextStyle(color: context.appColors.muted),
+          ),
           const SizedBox(height: 22),
           _AddOption(
             icon: Icons.camera_alt_rounded,
             iconColor: _orange,
-            backgroundColor: _orangeSoft,
+            backgroundColor: context.appColors.orangeSoft,
             title: '写真を撮ってAI登録',
             subtitle: '商品名と賞味期限をAIが読み取ります',
             badge: 'おすすめ',
@@ -1543,8 +1924,8 @@ class _AddFoodSheet extends StatelessWidget {
           const SizedBox(height: 10),
           _AddOption(
             icon: Icons.photo_library_outlined,
-            iconColor: _green,
-            backgroundColor: _greenSoft,
+            iconColor: context.appColors.green,
+            backgroundColor: context.appColors.greenSoft,
             title: 'アルバムから選ぶ',
             subtitle: '保存済みの写真をAIで読み取ります',
             onTap: () => Navigator.pop(context, _AddAction.gallery),
@@ -1552,8 +1933,8 @@ class _AddFoodSheet extends StatelessWidget {
           const SizedBox(height: 10),
           _AddOption(
             icon: Icons.forum_rounded,
-            iconColor: const Color(0xFF6750A4),
-            backgroundColor: const Color(0xFFEDE7F7),
+            iconColor: context.appColors.agent,
+            backgroundColor: context.appColors.agentSoft,
             title: 'AIと会話して登録',
             subtitle: '質問に答えて商品と期限を特定します',
             badge: 'NEW',
@@ -1562,8 +1943,8 @@ class _AddFoodSheet extends StatelessWidget {
           const SizedBox(height: 10),
           _AddOption(
             icon: Icons.edit_calendar_outlined,
-            iconColor: const Color(0xFF476A85),
-            backgroundColor: const Color(0xFFE4EFF7),
+            iconColor: context.appColors.blue,
+            backgroundColor: context.appColors.blueSoft,
             title: '手入力で登録',
             subtitle: '商品名と日付を自分で入力します',
             onTap: () => Navigator.pop(context, _AddAction.manual),
@@ -1596,7 +1977,7 @@ class _AddOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: const Color(0xFFFAF9F6),
+      color: context.appColors.surfaceMuted,
       borderRadius: BorderRadius.circular(20),
       child: InkWell(
         onTap: onTap,
@@ -1635,7 +2016,7 @@ class _AddOption extends StatelessWidget {
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: _orangeSoft,
+                              color: context.appColors.orangeSoft,
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
@@ -1653,12 +2034,15 @@ class _AddOption extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: const TextStyle(color: _muted, fontSize: 11.5),
+                      style: TextStyle(
+                        color: context.appColors.muted,
+                        fontSize: 11.5,
+                      ),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded, color: _muted),
+              Icon(Icons.chevron_right_rounded, color: context.appColors.muted),
             ],
           ),
         ),
@@ -1675,14 +2059,14 @@ class _AnalyzingDialog extends StatelessWidget {
     return PopScope(
       canPop: false,
       child: Dialog(
-        backgroundColor: _surface,
+        backgroundColor: context.appColors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        child: const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(
+              const SizedBox(
                 width: 58,
                 height: 58,
                 child: CircularProgressIndicator(
@@ -1690,15 +2074,15 @@ class _AnalyzingDialog extends StatelessWidget {
                   strokeWidth: 5,
                 ),
               ),
-              SizedBox(height: 22),
-              Text(
+              const SizedBox(height: 22),
+              const Text(
                 'AIが写真を読み取り中…',
                 style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
               ),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
               Text(
                 '商品名と賞味期限を探しています',
-                style: TextStyle(color: _muted, fontSize: 13),
+                style: TextStyle(color: context.appColors.muted, fontSize: 13),
               ),
             ],
           ),
@@ -1821,15 +2205,15 @@ class _ProductAgentPageState extends State<ProductAgentPage> {
           onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.close_rounded),
         ),
-        title: const Column(
+        title: Column(
           children: [
-            Text(
+            const Text(
               'AI Product Finder',
               style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
             ),
             Text(
               'DueBite Agent',
-              style: TextStyle(color: _muted, fontSize: 10),
+              style: TextStyle(color: context.appColors.muted, fontSize: 10),
             ),
           ],
         ),
@@ -1843,7 +2227,7 @@ class _ProductAgentPageState extends State<ProductAgentPage> {
                 controller: _scrollController,
                 padding: const EdgeInsets.fromLTRB(18, 10, 18, 16),
                 children: [
-                  _AgentIntroCard(isDemo: !widget.service.isConfigured),
+                  _AgentIntroCard(isDemo: widget.service.isDemo),
                   const SizedBox(height: 18),
                   for (final message in _messages) ...[
                     _AgentMessageBubble(message: message),
@@ -1889,8 +2273,8 @@ class _AgentIntroCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFEDE7F7), Color(0xFFFFF1E9)],
+        gradient: LinearGradient(
+          colors: [context.appColors.agentSoft, context.appColors.orangeSoft],
         ),
         borderRadius: BorderRadius.circular(20),
       ),
@@ -1899,13 +2283,13 @@ class _AgentIntroCard extends StatelessWidget {
           Container(
             width: 46,
             height: 46,
-            decoration: const BoxDecoration(
-              color: _surface,
+            decoration: BoxDecoration(
+              color: context.appColors.surface,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.auto_awesome_rounded,
-              color: Color(0xFF6750A4),
+              color: context.appColors.agent,
             ),
           ),
           const SizedBox(width: 12),
@@ -1926,13 +2310,13 @@ class _AgentIntroCard extends StatelessWidget {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: _surface,
+                        color: context.appColors.surface,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        isDemo ? 'DEMO' : 'ONLINE',
-                        style: const TextStyle(
-                          color: Color(0xFF6750A4),
+                        isDemo ? 'DEMO' : 'LIVE AI',
+                        style: TextStyle(
+                          color: context.appColors.agent,
                           fontSize: 9,
                           fontWeight: FontWeight.w900,
                         ),
@@ -1941,9 +2325,13 @@ class _AgentIntroCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  '分からない部分を質問し、登録に必要な情報を整理します。',
-                  style: TextStyle(color: _muted, fontSize: 12, height: 1.4),
+                Text(
+                  isDemo ? '固定のデモ応答で登録の流れを確認します。' : 'Geminiが会話から商品名と期限を整理します。',
+                  style: TextStyle(
+                    color: context.appColors.muted,
+                    fontSize: 12,
+                    height: 1.4,
+                  ),
                 ),
               ],
             ),
@@ -1968,19 +2356,19 @@ class _AgentMessageBubble extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: 520),
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
         decoration: BoxDecoration(
-          color: isUser ? _orange : _surface,
+          color: isUser ? _orange : context.appColors.surface,
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(18),
             topRight: const Radius.circular(18),
             bottomLeft: Radius.circular(isUser ? 18 : 4),
             bottomRight: Radius.circular(isUser ? 4 : 18),
           ),
-          border: isUser ? null : Border.all(color: const Color(0xFFE8E5DE)),
+          border: isUser ? null : Border.all(color: context.appColors.border),
         ),
         child: Text(
           message.text,
           style: TextStyle(
-            color: isUser ? Colors.white : _ink,
+            color: isUser ? Colors.white : context.appColors.text,
             height: 1.45,
             fontSize: 13,
           ),
@@ -2000,16 +2388,16 @@ class _AgentTypingBubble extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 13),
         decoration: BoxDecoration(
-          color: _surface,
+          color: context.appColors.surface,
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFE8E5DE)),
+          border: Border.all(color: context.appColors.border),
         ),
-        child: const SizedBox(
+        child: SizedBox(
           width: 48,
           child: LinearProgressIndicator(
             minHeight: 3,
-            color: Color(0xFF6750A4),
-            backgroundColor: Color(0xFFEDE7F7),
+            color: context.appColors.agent,
+            backgroundColor: context.appColors.agentSoft,
           ),
         ),
       ),
@@ -2028,12 +2416,12 @@ class _AgentErrorCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFECE8),
+        color: context.appColors.dangerSoft,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline_rounded, color: Colors.redAccent),
+          Icon(Icons.error_outline_rounded, color: context.appColors.danger),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -2063,20 +2451,25 @@ class _AgentCandidateCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: _greenSoft,
+        color: context.appColors.greenSoft,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: _green.withValues(alpha: .16)),
+        border: Border.all(
+          color: context.appColors.green.withValues(alpha: .28),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.task_alt_rounded, color: _green),
-              SizedBox(width: 8),
+              Icon(Icons.task_alt_rounded, color: context.appColors.green),
+              const SizedBox(width: 8),
               Text(
                 '商品を特定しました',
-                style: TextStyle(color: _green, fontWeight: FontWeight.w900),
+                style: TextStyle(
+                  color: context.appColors.green,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
             ],
           ),
@@ -2133,13 +2526,13 @@ class _AgentResultChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: _surface,
+        color: context.appColors.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: _green),
+          Icon(icon, size: 16, color: context.appColors.green),
           const SizedBox(width: 5),
           Text(
             label,
@@ -2171,9 +2564,9 @@ class _AgentComposer extends StatelessWidget {
         14,
         MediaQuery.paddingOf(context).bottom + 10,
       ),
-      decoration: const BoxDecoration(
-        color: _surface,
-        border: Border(top: BorderSide(color: Color(0xFFE8E5DE))),
+      decoration: BoxDecoration(
+        color: context.appColors.surface,
+        border: Border(top: BorderSide(color: context.appColors.border)),
       ),
       child: Column(
         children: [
@@ -2205,7 +2598,7 @@ class _AgentComposer extends StatelessWidget {
                 style: IconButton.styleFrom(
                   backgroundColor: _orange,
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor: const Color(0xFFD7D3CD),
+                  disabledBackgroundColor: context.appColors.disabled,
                   minimumSize: const Size(50, 50),
                 ),
                 icon: const Icon(Icons.arrow_upward_rounded),
@@ -2213,10 +2606,10 @@ class _AgentComposer extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 7),
-          const Text(
+          Text(
             '入力内容は商品特定のためAIへ送信されます。期限は必ず表示と照合してください。',
             textAlign: TextAlign.center,
-            style: TextStyle(color: _muted, fontSize: 9.5),
+            style: TextStyle(color: context.appColors.muted, fontSize: 9.5),
           ),
         ],
       ),
@@ -2332,14 +2725,18 @@ class _FoodEditorPageState extends State<FoodEditorPage> {
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: result.isDemo ? const Color(0xFFFFF4DB) : _greenSoft,
+                    color: result.isDemo
+                        ? context.appColors.warningSoft
+                        : context.appColors.greenSoft,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
                     children: [
                       Icon(
                         Icons.auto_awesome_rounded,
-                        color: result.isDemo ? const Color(0xFFA76C00) : _green,
+                        color: result.isDemo
+                            ? context.appColors.warning
+                            : context.appColors.green,
                       ),
                       const SizedBox(width: 10),
                       Expanded(
@@ -2349,8 +2746,8 @@ class _FoodEditorPageState extends State<FoodEditorPage> {
                               : 'AI読み取り精度 ${(result.confidence * 100).round()}%。内容をご確認ください。',
                           style: TextStyle(
                             color: result.isDemo
-                                ? const Color(0xFF825B12)
-                                : const Color(0xFF456B5C),
+                                ? context.appColors.warningText
+                                : context.appColors.green,
                             fontSize: 12.5,
                             height: 1.4,
                             fontWeight: FontWeight.w600,
@@ -2389,12 +2786,15 @@ class _FoodEditorPageState extends State<FoodEditorPage> {
                     vertical: 16,
                   ),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1F0EB),
+                    color: context.appColors.input,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.calendar_month_outlined, color: _muted),
+                      Icon(
+                        Icons.calendar_month_outlined,
+                        color: context.appColors.muted,
+                      ),
                       const SizedBox(width: 13),
                       Expanded(
                         child: Text(
@@ -2405,7 +2805,10 @@ class _FoodEditorPageState extends State<FoodEditorPage> {
                           ),
                         ),
                       ),
-                      const Icon(Icons.chevron_right_rounded, color: _muted),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: context.appColors.muted,
+                      ),
                     ],
                   ),
                 ),
@@ -2448,10 +2851,14 @@ class _FoodEditorPageState extends State<FoodEditorPage> {
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'AIの読み取り結果は間違う場合があります。保存前に日付をご確認ください。',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: _muted, fontSize: 11, height: 1.4),
+                style: TextStyle(
+                  color: context.appColors.muted,
+                  fontSize: 11,
+                  height: 1.4,
+                ),
               ),
             ],
           ),
@@ -2482,9 +2889,11 @@ class _PhotoPreview extends StatelessWidget {
                 fit: BoxFit.cover,
               );
             }
-            return const ColoredBox(
-              color: Color(0xFFEDEAE4),
-              child: Center(child: CircularProgressIndicator(color: _orange)),
+            return ColoredBox(
+              color: context.appColors.surfaceMuted,
+              child: const Center(
+                child: CircularProgressIndicator(color: _orange),
+              ),
             );
           },
         ),
@@ -2559,7 +2968,10 @@ class _PointEarnedDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 7),
-            Text('合計 $totalPoints P', style: const TextStyle(color: _muted)),
+            Text(
+              '合計 $totalPoints P',
+              style: TextStyle(color: context.appColors.muted),
+            ),
             const SizedBox(height: 22),
             FilledButton(
               style: FilledButton.styleFrom(
@@ -2586,23 +2998,40 @@ enum _AddAction { camera, gallery, agent, manual }
 
 enum _FoodFilter { active, consumed, all }
 
+enum _ExpiryTone { danger, warning, safe }
+
 class _ExpiryStatus {
-  const _ExpiryStatus(this.label, this.color, this.softColor);
+  const _ExpiryStatus(this.label, this.tone);
 
   final String label;
-  final Color color;
-  final Color softColor;
+  final _ExpiryTone tone;
+
+  Color color(BuildContext context) => switch (tone) {
+    _ExpiryTone.danger => context.appColors.danger,
+    _ExpiryTone.warning => _orange,
+    _ExpiryTone.safe => context.appColors.green,
+  };
+
+  Color softColor(BuildContext context) => switch (tone) {
+    _ExpiryTone.danger => context.appColors.dangerSoft,
+    _ExpiryTone.warning => context.appColors.orangeSoft,
+    _ExpiryTone.safe => context.appColors.greenSoft,
+  };
 
   factory _ExpiryStatus.from(int days) {
     if (days < 0) {
-      return const _ExpiryStatus('期限切れ', Color(0xFFD44545), Color(0xFFFFE7E7));
+      return const _ExpiryStatus('期限切れ', _ExpiryTone.danger);
     }
     if (days == 0) {
-      return const _ExpiryStatus('今日まで', Color(0xFFD44545), Color(0xFFFFE7E7));
+      return const _ExpiryStatus('今日まで', _ExpiryTone.danger);
     }
-    if (days == 1) return const _ExpiryStatus('あと1日', _orange, _orangeSoft);
-    if (days <= 3) return _ExpiryStatus('あと$days日', _orange, _orangeSoft);
-    return _ExpiryStatus('あと$days日', _green, _greenSoft);
+    if (days == 1) {
+      return const _ExpiryStatus('あと1日', _ExpiryTone.warning);
+    }
+    if (days <= 3) {
+      return _ExpiryStatus('あと$days日', _ExpiryTone.warning);
+    }
+    return _ExpiryStatus('あと$days日', _ExpiryTone.safe);
   }
 }
 

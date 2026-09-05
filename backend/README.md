@@ -5,6 +5,8 @@ FlutterアプリにAPIキーを含めず、Cloudflare Worker経由でGeminiを�
 - `POST /analyze-expiry`: 写真から商品名・賞味期限・カテゴリーを抽出
 - `POST /identify-product`: 会話しながら商品と期限を特定
 
+既定モデルは`gemini-3.8-flash`です。混雑による一時エラー時は`gemini-3.5-flash`、`gemini-3.5-flash-lite`の順に自動で切り替えます。`GEMINI_MODEL`と`GEMINI_FALLBACK_MODELS`で変更できます。thinkingトークンも出力料金の対象になるため、公開前に[Gemini APIの料金](https://ai.google.dev/gemini-api/docs/pricing)を確認してください。
+
 ## セットアップ
 
 1. [Google AI Studio](https://aistudio.google.com/app/apikey) でGemini APIキーを作成します。
@@ -31,10 +33,10 @@ FlutterアプリにAPIキーを含めず、Cloudflare Worker経由でGeminiを�
 
    ```powershell
    Set-Location ..
-   flutter run --dart-define=AI_API_BASE_URL=https://YOUR-WORKER.workers.dev/analyze-expiry
+   flutter run --dart-define=AI_API_BASE_URL=https://YOUR-WORKER.workers.dev
    ```
 
-APIキーはFlutterアプリや`wrangler.toml`へ記載しないでください。`AI_API_BASE_URL`を指定しない場合は、UI確認用のデモ応答を返します。
+APIキーはFlutterアプリや`wrangler.toml`へ記載しないでください。このリポジトリのアプリは公開済みDueBite Workerを既定値として使い、`AI_API_BASE_URL`で接続先を上書きできます。
 
 ## API形式
 

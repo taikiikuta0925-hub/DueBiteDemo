@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
@@ -49,15 +50,26 @@ class ProductAgentResult {
 }
 
 class AiExpiryService {
-  const AiExpiryService();
+  const AiExpiryService({String baseUrl = endpoint, http.Client? client})
+    : _baseUrl = baseUrl,
+      _client = client,
+      isDemo = false;
 
-  static const endpoint = String.fromEnvironment('AI_API_BASE_URL');
+  const AiExpiryService.demo() : _baseUrl = '', _client = null, isDemo = true;
 
-  bool get isConfigured => endpoint.trim().isNotEmpty;
+  static const endpoint = String.fromEnvironment(
+    'AI_API_BASE_URL',
+    defaultValue: 'https://tabekiri-ai.tx-appe-chi.workers.dev',
+  );
+
+  final String _baseUrl;
+  final http.Client? _client;
+  final bool isDemo;
+
+  bool get isConfigured => !isDemo && _baseUrl.trim().isNotEmpty;
 
   Future<AiExpiryResult> analyze(XFile image) async {
-    if (!isConfigured) {
-      // UIをAPIキーなしでも確認できる開発用フォールバック。
+    if (isDemo) {
       await Future<void>.delayed(const Duration(milliseconds: 1300));
       return AiExpiryResult(
         name: 'プレーンヨーグルト',
@@ -68,26 +80,14 @@ class AiExpiryService {
       );
     }
 
-    final bytes = await image.readAsBytes();
     final uri = _endpointFor('analyze-expiry');
-    final response = await http
-        .post(
-          uri,
-          headers: const {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'imageBase64': base64Encode(bytes),
-            'mimeType': image.mimeType ?? _mimeTypeFor(image.name),
-            'today': _dateOnly(DateTime.now()),
-            'locale': 'ja-JP',
-          }),
-        )
-        .timeout(const Duration(seconds: 30));
-
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw AiExpiryException('AIサーバーに接続できませんでした (${response.statusCode})');
-    }
-
-    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+    final bytes = await image.readAsBytes();
+    final decoded = await _post(uri, {
+      'imageBase64': base64Encode(bytes),
+      'mimeType': image.mimeType ?? _mimeTypeFor(image.name),
+      'today': _dateOnly(DateTime.now()),
+      'locale': 'ja-JP',
+    });
     final payload = decoded['data'] is Map<String, dynamic>
         ? decoded['data'] as Map<String, dynamic>
         : decoded;
@@ -111,27 +111,17 @@ class AiExpiryService {
   Future<ProductAgentResult> identifyProduct(
     List<ProductChatMessage> messages,
   ) async {
-    if (!isConfigured) return _demoIdentify(messages);
+    if (isDemo) return _demoIdentify(messages);
 
-    final response = await http
-        .post(
-          _endpointFor('identify-product'),
-          headers: const {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'messages': messages.map((message) => message.toJson()).toList(),
-            'today': _dateOnly(DateTime.now()),
-            'locale': 'ja-JP',
-          }),
-        )
-        .timeout(const Duration(seconds: 30));
-
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw AiExpiryException(
-        _errorMessage(response.body, fallback: 'AIエージェントに接続できませんでした'),
-      );
+    final decoded = await _post(_endpointFor('identify-product'), {
+      'messages': messages.map((message) => message.toJson()).toList(),
+      'today': _dateOnly(DateTime.now()),
+      'locale': 'ja-JP',
+    });
+    final reply = decoded['reply'];
+    if (reply is! String || reply.trim().isEmpty) {
+      throw const AiExpiryException('AIからの回答を読み取れませんでした。もう一度お試しください');
     }
-
-    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
     final expiryText = decoded['expiryDate'] as String? ?? '';
     final expiryDate = DateTime.tryParse(expiryText);
     final name = decoded['name'] as String? ?? '';
@@ -140,7 +130,7 @@ class AiExpiryService {
         name.trim().isNotEmpty &&
         expiryDate != null;
     return ProductAgentResult(
-      reply: decoded['reply'] as String? ?? 'もう少し詳しく教えてください。',
+      reply: reply,
       ready: ready,
       name: name,
       expiryDate: expiryDate,
@@ -151,8 +141,18 @@ class AiExpiryService {
   }
 
   Uri _endpointFor(String action) {
-    final uri = Uri.parse(endpoint);
-    final segments = [...uri.pathSegments];
+    final baseUrl = _baseUrl.trim();
+    if (baseUrl.isEmpty) {
+      throw const AiExpiryException('AIの接続先が設定されていません');
+    }
+    final uri = Uri.tryParse(baseUrl);
+    if (uri == null ||
+        !uri.hasAuthority ||
+        uri.host.isEmpty ||
+        (uri.scheme != 'https' && uri.scheme != 'http')) {
+      throw const AiExpiryException('AIの接続先URLが正しくありません');
+    }
+    final segments = uri.pathSegments.where((part) => part.isNotEmpty).toList();
     if (segments.isNotEmpty &&
         (segments.last == 'analyze-expiry' ||
             segments.last == 'identify-product')) {
@@ -161,6 +161,41 @@ class AiExpiryService {
       segments.add(action);
     }
     return uri.replace(pathSegments: segments);
+  }
+
+  Future<Map<String, dynamic>> _post(
+    Uri uri,
+    Map<String, dynamic> payload,
+  ) async {
+    final http.Response response;
+    try {
+      final post = _client?.post ?? http.post;
+      response = await post(
+        uri,
+        headers: const {'Content-Type': 'application/json'},
+        body: jsonEncode(payload),
+      ).timeout(const Duration(seconds: 30));
+    } on TimeoutException {
+      throw const AiExpiryException('AIの応答がタイムアウトしました。もう一度お試しください');
+    } on http.ClientException {
+      throw const AiExpiryException('AIサーバーに接続できませんでした。通信環境を確認してください');
+    }
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw AiExpiryException(
+        _errorMessage(
+          response.body,
+          fallback: 'AIサーバーでエラーが発生しました (${response.statusCode})',
+        ),
+      );
+    }
+    try {
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map<String, dynamic>) return decoded;
+    } on FormatException {
+      // 不正な応答は固定回答へ置き換えず、画面で再試行を案内する。
+    }
+    throw const AiExpiryException('AIからの回答を読み取れませんでした。もう一度お試しください');
   }
 
   Future<ProductAgentResult> _demoIdentify(

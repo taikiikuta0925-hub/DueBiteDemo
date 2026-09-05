@@ -9,34 +9,34 @@ const allowedCategories = [
 ];
 
 const foodSchema = {
-  type: 'OBJECT',
+  type: 'object',
   properties: {
-    name: { type: 'STRING' },
+    name: { type: 'string' },
     expiryDate: {
-      type: 'STRING',
+      type: 'string',
       description: 'YYYY-MM-DD。分からない場合は空文字',
     },
-    category: { type: 'STRING', enum: allowedCategories },
-    confidence: { type: 'NUMBER', minimum: 0, maximum: 1 },
+    category: { type: 'string', enum: allowedCategories },
+    confidence: { type: 'number', minimum: 0, maximum: 1 },
   },
   required: ['name', 'expiryDate', 'category', 'confidence'],
 };
 
 const chatSchema = {
-  type: 'OBJECT',
+  type: 'object',
   properties: {
-    reply: { type: 'STRING', description: 'ユーザーへ返す短い日本語メッセージ' },
+    reply: { type: 'string', description: 'ユーザーへ返す短い日本語メッセージ' },
     ready: {
-      type: 'BOOLEAN',
+      type: 'boolean',
       description: '商品名と賞味期限の両方が確定した場合のみtrue',
     },
-    name: { type: 'STRING', description: '不明な場合は空文字' },
+    name: { type: 'string', description: '不明な場合は空文字' },
     expiryDate: {
-      type: 'STRING',
+      type: 'string',
       description: 'YYYY-MM-DD。不明な場合は空文字',
     },
-    category: { type: 'STRING', enum: allowedCategories },
-    confidence: { type: 'NUMBER', minimum: 0, maximum: 1 },
+    category: { type: 'string', enum: allowedCategories },
+    confidence: { type: 'number', minimum: 0, maximum: 1 },
   },
   required: ['reply', 'ready', 'name', 'expiryDate', 'category', 'confidence'],
 };
@@ -71,6 +71,13 @@ export default {
       }
       return json({ error: 'Not found' }, 404, corsHeaders);
     } catch (error) {
+      if (error.retryable) {
+        return json(
+          { error: 'AIが混み合っています。少し待ってからもう一度お試しください。' },
+          503,
+          corsHeaders,
+        );
+      }
       return json({ error: error.message || 'Unexpected error' }, 500, corsHeaders);
     }
   },
@@ -110,8 +117,8 @@ async function analyzeImage(body, env, corsHeaders) {
 async function identifyProduct(body, env, corsHeaders) {
   const today = body.today || new Date().toISOString().slice(0, 10);
   const messages = Array.isArray(body.messages) ? body.messages.slice(-16) : [];
-  const contents = normalizeMessages(messages);
-  if (contents.length === 0) {
+  const conversation = normalizeConversation(messages);
+  if (conversation.length === 0) {
     return json({ error: 'messages are required' }, 400, corsHeaders);
   }
 
@@ -124,32 +131,79 @@ async function identifyProduct(body, env, corsHeaders) {
     '日付はYYYY-MM-DD、不明な文字列は空文字にしてください。';
   const result = await callGemini({
     env,
-    contents,
+    contents: [
+      {
+        role: 'user',
+        parts: [
+          {
+            text:
+              '以下はこれまでの会話履歴です。\n\n' +
+              `${JSON.stringify(conversation)}\n\n` +
+              '最後のユーザー発言に対し、必要な返答と登録候補を出力してください。',
+          },
+        ],
+      },
+    ],
     schema: chatSchema,
     systemInstruction,
   });
   return json(result, 200, corsHeaders);
 }
 
-function normalizeMessages(messages) {
-  const contents = [];
+function normalizeConversation(messages) {
+  const conversation = [];
   for (const message of messages) {
     const text = typeof message?.text === 'string' ? message.text.trim() : '';
     if (!text) continue;
-    const role = message.role === 'assistant' ? 'model' : 'user';
-    if (contents.length === 0 && role !== 'user') continue;
-    const previous = contents.at(-1);
-    if (previous?.role === role) {
-      previous.parts[0].text += `\n${text}`;
-    } else {
-      contents.push({ role, parts: [{ text }] });
-    }
+    conversation.push({
+      role: message.role === 'assistant' ? 'assistant' : 'user',
+      text,
+    });
   }
-  return contents;
+  return conversation;
 }
 
 async function callGemini({ env, contents, schema, systemInstruction }) {
-  const model = env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
+  const models = geminiModelCandidates(env);
+  let lastError;
+
+  for (const model of models) {
+    try {
+      return await callGeminiModel({
+        env,
+        model,
+        contents,
+        schema,
+        systemInstruction,
+      });
+    } catch (error) {
+      lastError = error;
+      if (!error.retryable) throw error;
+    }
+  }
+
+  throw lastError || new Error('Gemini request failed');
+}
+
+function geminiModelCandidates(env) {
+  const primary = env.GEMINI_MODEL || 'gemini-3.8-flash';
+  const fallbacks = (
+    env.GEMINI_FALLBACK_MODELS ||
+    'gemini-3.5-flash,gemini-3.5-flash-lite'
+  )
+    .split(',')
+    .map((model) => model.trim())
+    .filter(Boolean);
+  return [...new Set([primary, ...fallbacks])];
+}
+
+async function callGeminiModel({
+  env,
+  model,
+  contents,
+  schema,
+  systemInstruction,
+}) {
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
     {
@@ -164,10 +218,15 @@ async function callGemini({ env, contents, schema, systemInstruction }) {
           : {}),
         contents,
         generationConfig: {
-          temperature: 0.1,
-          maxOutputTokens: 400,
-          responseMimeType: 'application/json',
-          responseSchema: schema,
+          maxOutputTokens: 1024,
+          thinkingConfig: { thinkingLevel: 'low' },
+          responseFormat: {
+            text: {
+              // generateContent REST uses an enum, unlike the SDK/Interactions API.
+              mimeType: 'APPLICATION_JSON',
+              schema,
+            },
+          },
         },
       }),
     },
@@ -175,13 +234,24 @@ async function callGemini({ env, contents, schema, systemInstruction }) {
 
   const responseBody = await response.json();
   if (!response.ok) {
-    throw new Error(responseBody.error?.message || 'Gemini request failed');
+    const message = responseBody.error?.message || 'Gemini request failed';
+    const error = new Error(message);
+    error.retryable = isRetryableGeminiError(response.status, message);
+    throw error;
   }
   const outputText = responseBody.candidates?.[0]?.content?.parts
-    ?.map((part) => part.text || '')
+    ?.filter((part) => part.thought !== true && typeof part.text === 'string')
+    .map((part) => part.text)
     .join('');
   if (!outputText) throw new Error('No structured result returned');
-  return JSON.parse(outputText);
+  return { ...JSON.parse(outputText), modelUsed: model };
+}
+
+function isRetryableGeminiError(status, message) {
+  if ([429, 500, 502, 503, 504].includes(status)) return true;
+  return /high demand|temporar|unavailable|overloaded|resource exhausted/i.test(
+    message,
+  );
 }
 
 function json(body, status, corsHeaders) {

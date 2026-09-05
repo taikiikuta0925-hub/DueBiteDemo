@@ -1,6 +1,7 @@
 # DueBite
 
 賞味期限のアプリです（デモ版）
+
 ## 実装済み
 
 - カメラ撮影／アルバム選択
@@ -9,26 +10,27 @@
 - 手入力とカレンダー入力
 - 期限順の一覧、緊急度表示、食べきり済み管理
 - 期限内の食べきりで10〜20ポイント付与
-- ポイント履歴とレベル表示
+- 0ポイント開始、ポイント履歴、5段階のレベル表示
+- ポイント達成でアンロックされるデモ報酬（実交換は準備中）
 - iOS・Androidの期限通知（3日前と当日、通知時刻を選択可能）
 - SharedPreferencesによる端末内保存
-- Android、iOS、Web対応のレスポンシブUI
+- Android、iOS、Web対応のレスポンシブUIと端末追従ダークモード
 
 iOS・Androidの期限通知は、端末に設定されている現地時刻を使います。Androidでは、端末を再起動した後も通知予約を復元します。
 
 ## 起動
 
-AI未設定でもデモ解析付きで動作します。
+通常の起動では、公開済みのDueBite AI Workerを通してGeminiへ接続します。
 
 ```powershell
 flutter pub get
 flutter run
 ```
 
-実際のAI画像解析を使う場合は、先に [backend/README.md](backend/README.md) のWorkerをデプロイし、そのURLを渡します。
+別のWorkerへ接続する場合は、そのURLをビルド時に指定できます。
 
 ```powershell
-flutter run --dart-define=AI_API_BASE_URL=https://YOUR-WORKER.workers.dev/analyze-expiry
+flutter run --dart-define=AI_API_BASE_URL=https://YOUR-WORKER.workers.dev
 ```
 
 APIキーはFlutterアプリへ記載しないでください。WorkerのSecretとして保持します。
